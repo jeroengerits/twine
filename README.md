@@ -31,13 +31,30 @@ twine('text-xl', 'bg-red-500')->build();
 Twine can handle both strings and arrays of class names. It also supports nested arrays, which will be flattened into a single list of classes.
 
 ```php
-// Using an array
-Twine::make(['text-xl', 'bg-red-500'])->build();
-// returns 'text-xl bg-red-500'
+// Using strings
+Twine::make('text-xl')
+    ->with('bg-red-500')
+    ->with('font-bold')
+    ->build();
+// returns 'text-xl bg-red-500 font-bold'
+
+// Using arrays
+Twine::make('text-xl')
+    ->with(['bg-red-500', 'font-bold'])
+    ->build();
+// returns 'text-xl bg-red-500 font-bold'
 
 // Using nested arrays
-Twine::make(['text-xl', ['bg-red-500', 'font-bold']])->build();
-// returns 'text-xl bg-red-500 font-bold'
+Twine::make('text-xl')
+    ->with(['bg-red-500', ['font-bold', 'rounded']])
+    ->build();
+// returns 'text-xl bg-red-500 font-bold rounded'
+
+// Multiple arguments
+Twine::make('text-xl')
+    ->with('bg-red-500', 'font-bold', ['rounded', 'shadow'])
+    ->build();
+// returns 'text-xl bg-red-500 font-bold rounded shadow'
 ```
 
 ### Conditional Classes
