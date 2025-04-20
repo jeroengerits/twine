@@ -1,27 +1,20 @@
 # Twine
 
-**Twine is a Laravel utility for fluently building CSS class name strings with readability and flexibility in mind.**
+**Twine is a Laravel utility class for fluently building CSS class name strings.**
+
+## Features
+
+- Fluent interface for clean, readable code
+- Conditional class management using callbacks
+- Support for strings, arrays, and nested arrays
+- Prefix and suffix support for dynamic class generation
+- Laravel Integration
+- Zero dependencies
 
 ## Installation
 
 ```bash
 composer require jeroengerits/twine
-```
-
-## Quick Start
-
-```php
-// Basic usage
-Twine::make('text-xl')->build();
-// returns 'text-xl'
-
-// Multiple classes
-Twine::make('text-xl', 'bg-red-500')->build();
-// returns 'text-xl bg-red-500'
-
-// Using the helper function (if available)
-twine('text-xl', 'bg-red-500')->build();
-// returns 'text-xl bg-red-500'
 ```
 
 ## Core Features
@@ -94,15 +87,6 @@ Twine::make('bg-blue')
 - `prefix(string $prefix, Closure $callback): self` - Add a prefix to class names generated within the callback.
 - `suffix(string $suffix, Closure $callback): self` - Add a suffix to class names generated within the callback.
 - `build(): string` - Build and return the final class name string.
-
-## Features
-
-- Fluent interface for clean, readable code
-- Conditional class management using callbacks
-- Support for strings, arrays, and nested arrays
-- Prefix and suffix support for dynamic class generation
-- Laravel Integration
-- Zero dependencies
 
 ## License
 
