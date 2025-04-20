@@ -1,5 +1,6 @@
 <?php
 
+use JeroenGerits\Twine\Exceptions\InvalidTwineException;
 use JeroenGerits\Twine\Twine;
 use JeroenGerits\Twine\Twine\Processors\ArrayProcessor;
 use JeroenGerits\Twine\Twine\Processors\StringProcessor;
@@ -388,10 +389,16 @@ describe('Twine', function () {
         expect($classes)->toBe('base p-1 p-sm p-lg bold-important 0-important italic-important');
     });
 
-    it('throws exception for invalid input types', function () {
-        expect(fn () => new Twine(true))->toThrow(\InvalidArgumentException::class);
-        expect(fn () => Twine::make(true))->toThrow(\InvalidArgumentException::class);
-        expect(fn () => twine()->with(true))->toThrow(\InvalidArgumentException::class);
+    it('throws InvalidTwineException for invalid input types', function () {
+        expect(fn () => new Twine(true))->toThrow(InvalidTwineException::class);
+        expect(fn () => Twine::make(true))->toThrow(InvalidTwineException::class);
+        expect(fn () => twine()->with(true))->toThrow(InvalidTwineException::class);
+    });
+
+    it('throws InvalidTwineException with correct message', function () {
+        expect(fn () => new Twine(true))->toThrow(InvalidTwineException::class, 'Input must be a string, array, or null.');
+        expect(fn () => Twine::make(true))->toThrow(InvalidTwineException::class, 'Input must be a string, array, or null.');
+        expect(fn () => twine()->with(true))->toThrow(InvalidTwineException::class, 'Input must be a string, array, or null.');
     });
 
     it('handles deeply nested arrays', function () {

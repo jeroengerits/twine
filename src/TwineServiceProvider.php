@@ -2,7 +2,6 @@
 
 namespace JeroenGerits\Twine;
 
-use JeroenGerits\Twine\Commands\TwineCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -17,9 +16,5 @@ class TwineServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('twine');
-        // ->hasConfigFile()
-        // ->hasViews()
-        // ->hasMigration('create_twine_table')
-        // ->hasCommand(TwineCommand::class);
     }
 }

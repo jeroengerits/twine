@@ -4,6 +4,7 @@ namespace JeroenGerits\Twine;
 
 use Closure;
 use JeroenGerits\Twine\Contracts\TwineInputProcessor;
+use JeroenGerits\Twine\Exceptions\InvalidTwineException;
 use JeroenGerits\Twine\Twine\Processors\ArrayProcessor;
 use JeroenGerits\Twine\Twine\Processors\StringProcessor;
 
@@ -35,7 +36,7 @@ class Twine
     public function __construct(mixed $input = null)
     {
         if ($input !== null && ! is_string($input) && ! is_array($input)) {
-            throw new \InvalidArgumentException('Input must be a string, array, or null.');
+            throw InvalidTwineException::invalidInputType();
         }
 
         if ($input !== null) {
@@ -56,7 +57,7 @@ class Twine
     {
         foreach ($input as $item) {
             if ($item !== null && ! is_string($item) && ! is_array($item)) {
-                throw new \InvalidArgumentException('Input must be a string, array, or null.');
+                throw InvalidTwineException::invalidInputType();
             }
         }
 
@@ -74,7 +75,7 @@ class Twine
     {
         foreach ($input as $item) {
             if ($item !== null && ! is_string($item) && ! is_array($item)) {
-                throw new \InvalidArgumentException('Input must be a string, array, or null.');
+                throw InvalidTwineException::invalidInputType();
             }
 
             if ($item === null) {
