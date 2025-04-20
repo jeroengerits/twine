@@ -1,8 +1,6 @@
 # Twine
 
-**Twine is a PHP utility for fluently building CSS class name strings with readability and flexibility in mind.**
-
-Perfect for TailwindCSS, Laravel, and component-based workflows
+**Twine is a Laravel utility for fluently building CSS class name strings with readability and flexibility in mind.**
 
 ## Installation
 
@@ -13,8 +11,6 @@ composer require jeroengerits/twine
 ## Quick Start
 
 ```php
-use Jeroengerits\Twine\Twine;
-
 // Basic usage
 Twine::make('text-xl')->build();
 // returns 'text-xl'
