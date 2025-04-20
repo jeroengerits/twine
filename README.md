@@ -8,7 +8,6 @@
 - Conditional class management using callbacks
 - Support for strings, arrays, and nested arrays
 - Prefix and suffix support for dynamic class generation
-- Laravel Integration
 - Zero dependencies
 
 ## Installation
