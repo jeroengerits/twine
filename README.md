@@ -76,12 +76,21 @@ Twine::make('bg-blue')
 // returns 'bg-blue text-white/50 shadow-lg/50'
 ```
 
+### Helper Function
+
+```php
+twine()->make('text-xl')->build();
+// returns 'text-xl'
+```
+
 ## API Reference
 
 ### Static Methods
+
 - `make(mixed ...$input): self` - Create a new Twine instance with optional initial classes. Accepts strings, arrays, and nested arrays.
 
 ### Instance Methods
+
 - `with(mixed ...$input): self` - Add class names to the collection. Supports strings, arrays, and nested arrays.
 - `when(bool $condition, Closure $callback): self` - Conditionally add class names using a callback if the condition is true.
 - `prefix(string $prefix, Closure $callback): self` - Add a prefix to class names generated within the callback.
