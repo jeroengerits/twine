@@ -84,9 +84,8 @@ Twine::make('bg-blue')
 - Conditional class management using callbacks
 - Support for strings, arrays, and nested arrays
 - Prefix and suffix support for dynamic class generation
-- Laravel integration (if applicable)
+- Laravel Integration
 - Zero dependencies
-- Type safety
 
 ## License
 
@@ -95,7 +94,3 @@ MIT License
 ## Contributing
 
 Contributions are welcome! Feel free to submit a Pull Request or report issues on GitHub.
-
----
-
-This README now clearly states that Twine supports nested arrays as input and provides examples demonstrating this functionality.
