@@ -17,28 +17,27 @@ composer require jeroengerits/twine
 ```php
 // Simple
 twine('btn btn-primary');
-
-// Chain
-twine('btn')->add('btn-lg')->add('btn-warning');
-
-// Nested
 twine(['btn-primary', ['btn-lg', 'text-red']]);
 
-// Conditional
+// Chain
 twine('btn')
-    ->add('active', $isActive);
+    ->add('btn-lg')
+    ->add('btn-warning');
+
+// Conditional
+twine('btn', true);
+twine('btn')
+    ->add('active', true);
 
 // Callback when true
-twine('btn')
-    ->when($isLarge, function ($twine) {
-        return $twine->add('btn-lg');
-    });
+twine('btn')->when(true, function ($twine) {
+    return $twine->add('btn-lg');
+});
 
 // Callback when false
-twine('btn')
-    ->unless($isDisabled, function ($twine) {
-        return $twine->add('btn-active');
-    });
+twine('btn')->unless(true, function ($twine) {
+    return $twine->add('btn-active');
+});
 ```
 
 ### Mergings
