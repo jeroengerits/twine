@@ -4,7 +4,7 @@ namespace JeroenGerits\Twine\Contracts;
 
 use Stringable;
 
-interface TwineClassesBuilder extends Stringable
+interface TwineService extends Stringable
 {
     public static function make(string|array $classes, bool $condition = true): self;
 
