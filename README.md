@@ -1,6 +1,6 @@
 # Twine
 
-Twine is a Laravel utility for fluently building CSS class name strings.
+A Laravel utility for building CSS class strings with a clean API.
 
 > Work-in-progress: do not use in production.
 
@@ -10,75 +10,110 @@ Twine is a Laravel utility for fluently building CSS class name strings.
 composer require jeroengerits/twine
 ```
 
-## Usage
-
-### Basic Examples
+## Basic Usage
 
 ```php
-// Simple
-twine('btn btn-primary');
-twine(['btn-primary', ['btn-lg', 'text-red']]);
+// Create with string
+twine('btn btn-primary');                 // "btn btn-primary"
 
-// Chain
-twine('btn')
-    ->add('btn-lg')
-    ->add('btn-warning');
+// Create with array
+twine(['btn', 'btn-primary']);            // "btn btn-primary"
 
-// Conditional
-twine('btn', true);
-twine('btn')
-    ->add('active', true);
+// Add classes
+twine('btn')->add('btn-primary');         // "btn btn-primary"
 
-// Callback when true
-twine('btn')->when(true, function ($twine) {
-    return $twine->add('btn-lg');
-});
-
-// Callback when false
-twine('btn')->unless(true, function ($twine) {
-    return $twine->add('btn-active');
-});
+// Add conditionally
+twine('btn')->add('active', $isActive);   // "btn active" if $isActive is true
 ```
 
-### Mergings
+## Conditional Logic
 
 ```php
-$classes1 = twine('btn');
-$classes2 = twine('btn-primary');
+// Using when()
+twine('btn')
+    ->when(true, fn ($twine) => $twine->add('btn-lg'))
+    ->when(true, fn ($twine) => $twine->add('btn-primary'));
 
-$classes1->merge($classes2);
+// Using unless()
+twine('btn')
+    ->unless(true, fn ($twine) => $twine->add('active'));
 ```
 
-### Output
+## Combining Classes
+
+```php
+// Merge two instances
+$button = twine('btn');
+$variant = twine('btn-primary');
+
+$button->merge($variant);                 // "btn btn-primary"
+```
+
+## Output Options
 
 ```php
 $classes = twine('btn btn-primary');
 
-// As string
-$classes->toString(); // "btn btn-primary"
+// As string (multiple ways)
+echo $classes;                            // "btn btn-primary"
+$classes->toString();                     // "btn btn-primary"
+$classes->get();                          // "btn btn-primary"
 
 // As array
-$classes->toArray(); // ['btn', 'btn-primary']
-
-// String context
-echo $classes; // "btn btn-primary"
+$classes->toArray();                      // ['btn', 'btn-primary']
 ```
 
-## API
+## API Reference
 
-### Static Methods
+### Creating Instances
 
-- `make(array|string|null $classes = '', ?TwineClassesBuilder $builder = null): self` - Create new instance
+- `twine(string|array|null $classes = null): TwineService`
+  - Helper function to create a new instance
+  - Accepts string, array, or null input
+
+- `Twine::make(string|array $classes, bool $condition = true): TwineService`
+  - Static constructor
+  - Creates a new instance with optional condition
 
 ### Instance Methods
 
-- `add(array|string|null $classes, bool $condition = true): self` - Add classes
-- `when(bool $condition, callable $callback): self` - Add if true
-- `unless(bool $condition, callable $callback): self` - Add if false
-- `merge(Twine $other): self` - Combine with another instance
-- `toString(): string` - Get as string
-- `toArray(): array` - Get as array
-- `get(): string` - Alias for toString()
+- `add(string|array $classes, bool $condition = true): TwineService`
+  - Add one or more classes
+  - Only adds if condition is true
+  - Returns new instance
+
+- `when(bool $condition, callable $callback): TwineService`
+  - Run callback if condition is true
+  - Callback receives current instance
+  - Returns new instance
+
+- `unless(bool $condition, callable $callback): TwineService`
+  - Run callback if condition is false
+  - Callback receives current instance
+  - Returns new instance
+
+- `merge(TwineService $other): TwineService`
+  - Combine with another instance
+  - Returns new instance
+
+- `toString(): string`
+  - Convert to space-separated string
+  - Filters out empty values
+
+- `toArray(): array`
+  - Convert to array of classes
+  - Filters out empty values
+
+- `get(): string`
+  - Alias for toString()
+
+## Features
+
+- Immutable operations (methods return new instances)
+- Fluent interface for method chaining
+- Handles nested arrays
+- Removes empty values and duplicates
+- Type-safe with PHP 8 types
 
 ## License
 
