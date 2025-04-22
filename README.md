@@ -4,10 +4,10 @@
 
 ## Features
 
-- Fluent interface for clean, readable code
+- Fluent interface for clean, readable classes
 - Conditional class management using callbacks
 - Support for strings, arrays, and nested arrays
-- Prefix and suffix support for dynamic class generation
+- Prefix and suffix support
 - Zero dependencies
 
 ## Installation
@@ -52,9 +52,8 @@ Twine::make('text-xl')
 ### Conditional Classes
 
 ```php
-$isActive = true;
 Twine::make('text-xl')
-    ->when($isActive, fn($twine) => $twine->with(['bg-blue-500', ['border', 'rounded']]))
+    ->when(true, fn($twine) => $twine->with(['bg-blue-500', ['border', 'rounded']]))
     ->build();
 // returns 'text-xl bg-blue-500 border rounded'
 ```

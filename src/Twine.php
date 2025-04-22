@@ -1,260 +1,102 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JeroenGerits\Twine;
 
-use Closure;
-use JeroenGerits\Twine\Contracts\TwineInputProcessor;
-use JeroenGerits\Twine\Exceptions\InvalidTwineException;
-use JeroenGerits\Twine\Twine\Processors\ArrayProcessor;
-use JeroenGerits\Twine\Twine\Processors\StringProcessor;
+use JeroenGerits\Twine\Contracts\TwineClassesBuilder;
+use JeroenGerits\Twine\Twine\Builders\SimpleClassesBuilder;
 
 /**
- * Twine is a fluent PHP utility for building CSS class name strings.
- *
- * This class provides a clean, chainable interface for composing conditional and dynamic class names.
- * It supports various input types including strings, arrays, and null values.
+ * Helps build CSS class names in a simple way.
+ * Each operation creates a new instance, keeping the original unchanged.
  */
-class Twine
+readonly class Twine
 {
     /**
-     * The processor used to handle the input types.
+     * Creates a new instance with the given builder.
+     * Uses SimpleClassesBuilder if no builder is given.
      */
-    protected TwineInputProcessor $processor;
+    public function __construct(
+        private TwineClassesBuilder $builder = new SimpleClassesBuilder
+    ) {}
 
     /**
-     * Collection of input values to be processed.
+     * Creates a new instance with the given classes.
+     * Handles strings, arrays, and null values.
      */
-    protected array $inputs = [];
-
-    /**
-     * Create a new Twine instance.
-     *
-     * @param  mixed  $input  Initial class name(s) to add
-     *
-     * @throws \InvalidArgumentException If input is not a string, array, or null
-     */
-    public function __construct(mixed $input = null)
+    public static function make(array|string|null $classes = '', ?TwineClassesBuilder $builder = null): self
     {
-        if ($input !== null && ! is_string($input) && ! is_array($input)) {
-            throw InvalidTwineException::invalidInputType();
-        }
+        $builder = $builder ?? new SimpleClassesBuilder;
 
-        if ($input !== null) {
-            $this->inputs[] = $input;
-        }
-
-        $this->processor = $this->resolveProcessor($input);
+        return new self($builder->add($classes));
     }
 
     /**
-     * Create a new Twine instance with optional initial classes.
-     *
-     * @param  mixed  ...$input  Initial class name(s) to add
-     *
-     * @throws \InvalidArgumentException If any input is not a string, array, or null
+     * Adds new classes to the instance.
+     * Returns a new instance with the added classes.
      */
-    public static function make(mixed ...$input): self
+    public function add(array|string|null $classes, bool $condition = true): self
     {
-        foreach ($input as $item) {
-            if ($item !== null && ! is_string($item) && ! is_array($item)) {
-                throw InvalidTwineException::invalidInputType();
-            }
-        }
-
-        return new self(count($input) === 1 ? $input[0] : $input);
+        return new self($this->builder->add($classes, $condition));
     }
 
     /**
-     * Add class names to the collection.
-     *
-     * @param  mixed  ...$input  Class name(s) to add
-     *
-     * @throws \InvalidArgumentException If any input is not a string, array, or null
+     * Runs a callback if the condition is true.
+     * Returns a new instance with the result.
      */
-    public function with(mixed ...$input): self
+    public function when(bool $condition, callable $callback): self
     {
-        foreach ($input as $item) {
-            if ($item !== null && ! is_string($item) && ! is_array($item)) {
-                throw InvalidTwineException::invalidInputType();
-            }
-
-            if ($item === null) {
-                continue;
-            }
-
-            if (is_string($item)) {
-                $this->inputs[] = $item;
-            } else {
-                $this->inputs = array_merge($this->inputs, $this->flattenArray($item));
-                $this->processor = new ArrayProcessor(new StringProcessor);
-            }
-        }
-
-        return $this;
+        return new self($this->builder->when($condition, fn () => $callback($this)->builder));
     }
 
     /**
-     * Conditionally add class names using a callback.
-     *
-     * @param  bool  $condition  Condition to evaluate
-     * @param  Closure  $callback  Callback to execute if condition is true
+     * Runs a callback if the condition is false.
+     * Returns a new instance with the result.
      */
-    public function when(bool $condition, Closure $callback): self
+    public function unless(bool $condition, callable $callback): self
     {
-        if ($condition) {
-            $callback($this);
-        }
-
-        return $this;
+        return $this->when(! $condition, $callback);
     }
 
     /**
-     * Add a prefix to class names.
-     *
-     * @param  string  $prefix  The prefix to add
-     * @param  Closure  $callback  Callback to execute with the prefixed classes
+     * Combines classes from another instance.
+     * Returns a new instance with all classes.
      */
-    public function prefix(string $prefix, Closure $callback): self
+    public function merge(Twine $other): self
     {
-        $originalInputs = $this->inputs;
-        $this->inputs = [];
-
-        $callback($this);
-
-        /** @var array<array-key, mixed> $newInputs */
-        $newInputs = $this->inputs;
-        $this->inputs = $originalInputs;
-
-        /** @var array<array-key, mixed> $processedInputs */
-        $processedInputs = [];
-
-        foreach ($newInputs as $input) {
-            if ($input === null || $input === '') {
-                continue;
-            }
-
-            if (is_string($input)) {
-                $classes = explode(' ', $input);
-                $processedInputs[] = implode(' ', array_map(fn ($class) => $prefix.$class, $classes));
-
-                continue;
-            }
-
-            $processedInputs[] = array_map(fn ($class) => $prefix.(string) $class, (array) $input);
-        }
-
-        $this->inputs = array_merge($this->inputs, $processedInputs);
-
-        return $this;
+        return new self($this->builder->merge($other->builder));
     }
 
     /**
-     * Add a suffix to class names.
-     *
-     * @param  string  $suffix  The suffix to add
-     * @param  Closure  $callback  Callback to execute with the suffixed classes
+     * Returns the classes as a string.
      */
-    public function suffix(string $suffix, Closure $callback): self
+    public function get(): string
     {
-        $originalInputs = $this->inputs;
-        $this->inputs = [];
-
-        $callback($this);
-
-        /** @var array<array-key, mixed> $newInputs */
-        $newInputs = $this->inputs;
-        $this->inputs = $originalInputs;
-
-        /** @var array<array-key, mixed> $processedInputs */
-        $processedInputs = [];
-
-        foreach ($newInputs as $input) {
-            if ($input === null || $input === '') {
-                continue;
-            }
-
-            if (is_string($input)) {
-                $classes = explode(' ', $input);
-                $processedInputs[] = implode(' ', array_map(fn ($class) => $class.$suffix, $classes));
-
-                continue;
-            }
-
-            $processedInputs[] = array_map(fn ($class) => (string) $class.$suffix, (array) $input);
-        }
-
-        $this->inputs = array_merge($this->inputs, $processedInputs);
-
-        return $this;
+        return $this->toString();
     }
 
     /**
-     * Remove duplicate class names from the collection.
+     * Returns the classes as a space-separated string.
      */
-    public function unique(): self
+    public function toString(): string
     {
-        $this->inputs = array_unique($this->flattenArray($this->inputs));
-
-        return $this;
+        return $this->builder->toString();
     }
 
     /**
-     * Sort class names alphabetically.
+     * Returns the classes as an array.
      */
-    public function sort(): self
+    public function toArray(): array
     {
-        $flattened = $this->flattenArray($this->inputs);
-        $base = array_shift($flattened);
-        sort($flattened, SORT_STRING);
-        array_unshift($flattened, $base);
-        $this->inputs = $flattened;
-
-        return $this;
+        return $this->builder->toArray();
     }
 
     /**
-     * Build and return the final class string.
+     * Returns the classes as a string when used in string context.
      */
-    public function build(): string
+    public function __toString(): string
     {
-        return empty($this->inputs)
-            ? ''
-            : $this->processor->process($this->inputs);
-    }
-
-    /**
-     * Resolve the appropriate processor based on input type.
-     *
-     * @param  mixed  $input  Input to process
-     */
-    private function resolveProcessor(mixed $input): TwineInputProcessor
-    {
-        if ($input === null) {
-            return new ArrayProcessor(new StringProcessor);
-        }
-
-        if (is_string($input)) {
-            return new StringProcessor;
-        }
-
-        return new ArrayProcessor(new StringProcessor);
-    }
-
-    /**
-     * Flatten a nested array into a single array of strings.
-     *
-     * @param  array<array-key, mixed>  $array  Array to flatten
-     * @return array<array-key, string>
-     */
-    protected function flattenArray(array $array): array
-    {
-        $result = [];
-        array_walk_recursive($array, function ($value) use (&$result) {
-            if ($value !== null && $value !== '') {
-                $result[] = (string) $value;
-            }
-        });
-
-        return $result;
+        return $this->toString();
     }
 }

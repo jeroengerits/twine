@@ -1,450 +1,218 @@
 <?php
 
-use JeroenGerits\Twine\Exceptions\InvalidTwineException;
 use JeroenGerits\Twine\Twine;
-use JeroenGerits\Twine\Twine\Processors\ArrayProcessor;
-use JeroenGerits\Twine\Twine\Processors\StringProcessor;
+use JeroenGerits\Twine\Twine\Builders\SimpleClassesBuilder;
 
 describe('Twine', function () {
-    it('creates a new instance using the static factory method', function () {
-        expect(Twine::make())->toBeInstanceOf(Twine::class);
+    describe('API', function () {
+        it('twine() function should return Twine instance', function () {
+            expect(twine())->toBeInstanceOf(Twine::class);
+        });
+
+        it('twine function should accept string input', function (): void {
+            expect(twine('bg-red-400'))->toBeInstanceOf(Twine::class);
+        });
+
+        it('twine function should accept array input', function (): void {
+            expect(twine(['bg-red-400', 'text-green-500']))->toBeInstanceOf(Twine::class);
+        });
+
+        it('should use custom builder when provided', function () {
+            $builder = SimpleClassesBuilder::make('custom-prefix');
+            $twine = Twine::make('custom-suffix', $builder);
+            expect($twine->toString())->toBe('custom-prefix custom-suffix');
+        });
+
+        it('should handle null input with custom builder', function () {
+            $builder = SimpleClassesBuilder::make('base');
+            $twine = Twine::make(null, $builder);
+            expect($twine->toString())->toBe('base');
+        });
+
+        it('should convert to string using __toString', function () {
+            $twine = Twine::make('btn');
+            expect((string) $twine)->toBe('btn');
+        });
+
+        it('should handle empty string input', function () {
+            $twine = Twine::make('');
+            expect($twine->toString())->toBe('');
+        });
+
+        it('should handle empty array input', function () {
+            $twine = Twine::make([]);
+            expect($twine->toString())->toBe('');
+        });
+
+        it('should handle multiple empty strings in array', function () {
+            $twine = Twine::make(['', '', '']);
+            expect($twine->toString())->toBe('');
+        });
+
+        it('should preserve custom builder state across operations', function () {
+            $builder = SimpleClassesBuilder::make('prefix');
+            $twine1 = Twine::make('middle', $builder);
+            $twine2 = Twine::make('suffix', $builder);
+
+            expect($twine1->toString())->toBe('prefix middle');
+            expect($twine2->toString())->toBe('prefix suffix');
+        });
+
+        it('should handle mixed whitespace and empty strings in array', function () {
+            $twine = Twine::make(['  ', '', 'valid', "\t", 'class']);
+            expect($twine->toString())->toBe('valid class');
+        });
+
+        it('should handle special characters in class names', function () {
+            $twine = Twine::make(['bg-opacity-50%', 'text-[#123456]', 'w-1/2']);
+            expect($twine->toString())->toBe('bg-opacity-50% text-[#123456] w-1/2');
+        });
     });
 
-    it('creates a new instance using the helper function', function () {
-        expect(twine())->toBeInstanceOf(Twine::class);
-    });
+    describe('Builder', function () {
+        describe('Initialization', function () {
+            it('creates a new instance using the static factory method', function () {
+                expect(SimpleClassesBuilder::make())->toBeInstanceOf(SimpleClassesBuilder::class);
+            });
 
-    it('returns an empty string when no input is provided', function () {
-        expect(twine()->build())->toBeString();
-    });
+            it('initializes with empty string when no input is provided', function () {
+                $builder = SimpleClassesBuilder::make();
+                expect($builder->toArray())->toBe(['']);
+                expect($builder->toString())->toBe('');
+            });
 
-    it('returns a single class name when provided as a string', function () {
-        expect(twine('bg-red-500')->build())
-            ->toBeString()
-            ->toBe('bg-red-500');
-    });
+            it('initializes with string class', function () {
+                $builder = SimpleClassesBuilder::make('btn');
+                expect($builder->toArray())->toBe(['btn']);
+                expect($builder->toString())->toBe('btn');
+            });
 
-    it('combines multiple class names from an array into a space-separated string', function () {
-        expect(twine(['bg-red-500', 'text-white'])->build())
-            ->toBeString()
-            ->toBe('bg-red-500 text-white');
-    });
+            it('initializes with array of classes', function () {
+                $builder = SimpleClassesBuilder::make(['btn', 'btn-primary']);
+                expect($builder->toArray())->toBe(['btn', 'btn-primary']);
+                expect($builder->toString())->toBe('btn btn-primary');
+            });
+        });
 
-    it('flattens and combines class names from nested arrays', function () {
-        expect(twine(['bg-red-500', ['text-white', 'text-black']])->build())
-            ->toBeString()
-            ->toBe('bg-red-500 text-white text-black');
-    });
+        describe('Adding Classes', function () {
+            it('adds string class', function () {
+                $builder = SimpleClassesBuilder::make('btn')
+                    ->add('btn-primary');
+                expect($builder->toString())->toBe('btn btn-primary');
+            });
 
-    it('returns an empty string for null, empty array, or no input', function () {
-        expect(twine()->build())->toBeString()->toBe('');
-        expect(twine(null)->build())->toBeString()->toBe('');
-        expect(twine([])->build())->toBeString()->toBe('');
-    });
+            it('adds array of classes', function () {
+                $builder = SimpleClassesBuilder::make('btn')
+                    ->add(['btn-primary', 'btn-lg']);
+                expect($builder->toString())->toBe('btn btn-primary btn-lg');
+            });
 
-    it('removes empty strings and trims whitespace from class names', function () {
-        expect(twine(['', 'bg-red-500', '', 'text-white', ''])->build())
-            ->toBeString()
-            ->toBe('bg-red-500 text-white');
+            it('removes duplicate classes', function () {
+                $builder = SimpleClassesBuilder::make('btn')
+                    ->add('btn')
+                    ->add('btn-primary')
+                    ->add('btn');
+                expect($builder->toString())->toBe('btn btn-primary');
+            });
 
-        expect(twine(['  bg-red-500  ', '  text-white  '])->build())
-            ->toBeString()
-            ->toBe('bg-red-500 text-white');
-    });
+            it('removes duplicate classes case-sensitively', function () {
+                $builder = SimpleClassesBuilder::make('btn')
+                    ->add('BTN')
+                    ->add('btn-primary')
+                    ->add('BTN');
+                expect($builder->toString())->toBe('btn BTN btn-primary');
+            });
+        });
 
-    it('removes duplicate class names from the input', function () {
-        $input = ['bg-red-500', 'bg-red-500', 'text-white', 'text-white'];
-        $expected = 'bg-red-500 text-white';
+        describe('Whitespace Handling', function () {
+            it('handles whitespace in class names', function () {
+                $builder = SimpleClassesBuilder::make('  btn  ')
+                    ->add('  btn-primary  ')
+                    ->add('  btn  ');
+                expect($builder->toString())->toBe('btn btn-primary');
+            });
 
-        expect(twine($input)->build())
-            ->toBeString()
-            ->toBe($expected);
-    });
+            it('handles whitespace and case sensitivity together', function () {
+                $builder = SimpleClassesBuilder::make('  btn  ')
+                    ->add('  BTN  ')
+                    ->add('  btn-primary  ')
+                    ->add('  BTN  ');
+                expect($builder->toString())->toBe('btn BTN btn-primary');
+            });
 
-    it('removes duplicate class names from nested arrays', function () {
-        $input = ['bg-red-500', ['text-white', 'text-white'], 'text-white', ['text-red-500', 'text-white']];
-        $expected = 'bg-red-500 text-white text-red-500';
+            it('handles multiple spaces and tabs in class names', function () {
+                $builder = SimpleClassesBuilder::make("btn\t")
+                    ->add("btn\t\tprimary")
+                    ->add("btn\t")
+                    ->add('  btn-primary  ');
+                expect($builder->toString())->toBe('btn btn primary btn-primary');
+            });
+        });
 
-        expect(twine($input)->build())
-            ->toBeString()
-            ->toBe($expected);
-    });
+        describe('Conditional Operations', function () {
+            it('conditionally adds classes when condition is true', function () {
+                $builder = SimpleClassesBuilder::make('btn')
+                    ->add('btn-primary', true);
+                expect($builder->toString())->toBe('btn btn-primary');
+            });
 
-    it('handles deeply nested arrays of class names', function () {
-        $input = ['bg-red-500', ['text-white', ['font-bold', ['hover:bg-blue-500']]]];
-        $expected = 'bg-red-500 text-white font-bold hover:bg-blue-500';
+            it('does not add classes when condition is false', function () {
+                $builder = SimpleClassesBuilder::make('btn')
+                    ->add('btn-primary', false);
+                expect($builder->toString())->toBe('btn');
+            });
 
-        expect(twine($input)->build())
-            ->toBeString()
-            ->toBe($expected);
-    });
-
-    it('handles mixed input types in nested arrays', function () {
-        $input = ['bg-red-500', ['text-white', null, 'font-bold', ['']]];
-        $expected = 'bg-red-500 text-white font-bold';
-
-        expect(twine($input)->build())
-            ->toBeString()
-            ->toBe($expected);
-    });
-
-    it('always returns a string regardless of input type', function () {
-        $input = [
-            'string' => fn () => fake()->word(),
-            'array' => fn () => array_map(fn () => fake()->word(), range(1, fake()->numberBetween(1, 5))),
-            'null' => fn () => null,
-            'empty' => fn () => '',
-        ];
-
-        $randomInput = $input[array_rand($input)]();
-
-        expect(twine($randomInput)->build())->toBeString();
-    });
-
-    it('handles randomly generated nested arrays of class names', function () {
-        $generateNestedArray = function ($depth = 0) use (&$generateNestedArray) {
-            if ($depth > 3) {
-                return fake()->word();
-            }
-
-            return array_map(function () use ($depth, $generateNestedArray) {
-                return fake()->boolean(70)
-                    ? fake()->word()
-                    : $generateNestedArray($depth + 1);
-            }, range(1, fake()->numberBetween(1, 3)));
-        };
-
-        $nestedArray = $generateNestedArray();
-        $result = twine($nestedArray)->build();
-
-        expect($result)->toBeString()->not->toBeEmpty();
-    });
-
-    it('removes duplicates in randomly generated arrays of class names', function () {
-        $words = array_map(fn () => fake()->word(), range(1, 10));
-        $array = array_map(fn () => $words[array_rand($words)], range(1, 20));
-
-        $result = twine($array)->build();
-        $uniqueWords = array_unique(explode(' ', $result));
-
-        expect(count(explode(' ', $result)))->toBe(count($uniqueWords));
-    });
-
-    it('chains multiple class names using the with method', function () {
-        $classes = twine('bg-red-400')
-            ->with('text-green-300')
-            ->build();
-
-        expect($classes)->toBe('bg-red-400 text-green-300');
-    });
-
-    it('adds conditional class names when the condition is true', function () {
-        $classes = twine()
-            ->with('bg-blue-300')
-            ->when(true, function ($twine) {
-                $twine->with('text-green-300');
-            })
-            ->build();
-
-        expect($classes)
-            ->toBeString()
-            ->toBe('bg-blue-300 text-green-300');
-    });
-
-    it('skips conditional class names when the condition is false', function () {
-        $classes = twine()
-            ->with('bg-blue-300')
-            ->when(false, function ($twine) {
-                $twine->with('text-green-300');
-            })
-            ->build();
-
-        expect($classes)
-            ->toBeString()
-            ->toBe('bg-blue-300');
-    });
-
-    it('adds multiple conditional class names when the condition is true', function () {
-        $classes = twine()
-            ->with('bg-blue-300')
-            ->when(true, function ($twine) {
-                $twine->with('text-green-300', 'text-red-300');
-            })
-            ->build();
-
-        expect($classes)
-            ->toBeString()
-            ->toBe('bg-blue-300 text-green-300 text-red-300');
-    });
-
-    it('adds multiple conditional class names from nested arrays when the condition is true', function () {
-        $classes = twine()
-            ->with('bg-blue-300')
-            ->when(true, function ($twine) {
-                $twine->with(['text-green-300', 'text-red-300'], 'border-2 border-black');
-            })
-            ->build();
-
-        expect($classes)
-            ->toBeString()
-            ->toBe('bg-blue-300 text-green-300 text-red-300 border-2 border-black');
-    });
-
-    it('handles nested conditional class name additions', function () {
-        $classes = twine()
-            ->with('bg-blue-300')
-            ->when(true, function ($twine) {
-                $twine->with('text-green-300')
-                    ->when(true, function ($twine) {
-                        $twine->with('hover:bg-green-100');
+            it('executes callback when condition is true', function () {
+                $result = SimpleClassesBuilder::make('btn')
+                    ->when(true, function ($builder) {
+                        return $builder->add('btn-primary');
                     });
-            })
-            ->build();
+                expect($result->toString())->toBe('btn btn-primary');
+            });
 
-        expect($classes)
-            ->toBeString()
-            ->toBe('bg-blue-300 text-green-300 hover:bg-green-100');
-    });
-
-    it('handles numeric values as class names', function () {
-        expect(twine(123)->build())->toBe('123');
-        expect(twine(0)->build())->toBe('0');
-        expect(twine([123, 'bg-red-500', 0])->build())->toBe('123 bg-red-500 0');
-    });
-
-    it('handles mixed types in arrays of class names', function () {
-        $input = [
-            'bg-red-500',
-            123,
-            null,
-            true,
-            false,
-            '',
-            'text-white',
-            ['nested', 'array'],
-            0,
-        ];
-        expect(twine($input)->build())->toBe('bg-red-500 123 text-white nested array 0');
-    });
-
-    it('preserves the order of class names in the input', function () {
-        $input = ['z-10', 'absolute', 'top-0', 'left-0'];
-        expect(twine($input)->build())->toBe('z-10 absolute top-0 left-0');
-    });
-
-    it('chains multiple with method calls correctly', function () {
-        $classes = twine('bg-red-500')
-            ->with('text-white')
-            ->with('p-4')
-            ->with('m-2')
-            ->build();
-
-        expect($classes)->toBe('bg-red-500 text-white p-4 m-2');
-    });
-
-    it('handles empty arrays in nested structures', function () {
-        $input = [
-            'bg-red-500',
-            [],
-            ['text-white', []],
-            'p-4',
-        ];
-        expect(twine($input)->build())->toBe('bg-red-500 text-white p-4');
-    });
-
-    it('handles complex nested conditionals with arrays', function () {
-        $classes = twine('base')
-            ->when(true, function ($t) {
-                return $t->with(['nested', 'array'])
-                    ->when(true, function ($t) {
-                        return $t->with('deep-nested');
+            it('does not execute callback when condition is false', function () {
+                $result = SimpleClassesBuilder::make('btn')
+                    ->when(false, function ($builder) {
+                        return $builder->add('btn-primary');
                     });
-            })
-            ->build();
+                expect($result->toString())->toBe('btn');
+            });
 
-        expect($classes)->toBe('base nested array deep-nested');
-    });
+            it('executes callback when condition is false in unless', function () {
+                $result = SimpleClassesBuilder::make('btn')
+                    ->unless(false, function ($builder) {
+                        return $builder->add('btn-primary');
+                    });
+                expect($result->toString())->toBe('btn btn-primary');
+            });
 
-    it('handles deeply nested arrays with mixed types', function () {
-        $input = [
-            'level1',
-            [
-                'level2',
-                [
-                    'level3',
-                    null,
-                    true,
-                    false,
-                    '',
-                    ['level4', ['level5']],
-                ],
-            ],
-        ];
-        expect(twine($input)->build())->toBe('level1 level2 level3 level4 level5');
-    });
+            it('does not execute callback when condition is true in unless', function () {
+                $result = SimpleClassesBuilder::make('btn')
+                    ->unless(true, function ($builder) {
+                        return $builder->add('btn-primary');
+                    });
+                expect($result->toString())->toBe('btn');
+            });
+        });
 
-    it('handles custom string processor in array processor', function () {
-        $stringProcessor = new StringProcessor;
-        $arrayProcessor = new ArrayProcessor($stringProcessor);
+        describe('Builder Operations', function () {
+            it('merges with another builder', function () {
+                $builder1 = SimpleClassesBuilder::make('btn');
+                $builder2 = SimpleClassesBuilder::make('btn-primary');
 
-        $result = $arrayProcessor->process(['test', '  trimmed  ']);
-        expect($result)->toBe('test trimmed');
-    });
+                $result = $builder1->merge($builder2);
+                expect($result->toString())->toBe('btn btn-primary');
+            });
 
-    it('handles null input in array processor', function () {
-        $arrayProcessor = new ArrayProcessor;
-        expect($arrayProcessor->process(null))->toBe('');
-    });
+            it('returns string using get method', function () {
+                $builder = SimpleClassesBuilder::make('btn');
+                expect($builder->get())->toBe('btn');
+            });
 
-    it('handles boolean values in array processor', function () {
-        $arrayProcessor = new ArrayProcessor;
-        expect($arrayProcessor->process([true, false]))->toBe('');
-    });
-
-    it('handles empty arrays in array processor', function () {
-        $arrayProcessor = new ArrayProcessor;
-        expect($arrayProcessor->process([]))->toBe('');
-    });
-
-    it('handles null input in string processor', function () {
-        $stringProcessor = new StringProcessor;
-        expect($stringProcessor->process(null))->toBe('');
-    });
-
-    it('handles boolean values in string processor', function () {
-        $stringProcessor = new StringProcessor;
-        expect($stringProcessor->process(true))->toBe('');
-        expect($stringProcessor->process(false))->toBe('');
-    });
-
-    it('handles numeric values in string processor', function () {
-        $stringProcessor = new StringProcessor;
-        expect($stringProcessor->process(123))->toBe('123');
-        expect($stringProcessor->process(0))->toBe('0');
-        expect($stringProcessor->process(3.14))->toBe('3.14');
-    });
-
-    it('handles string values in string processor', function () {
-        $stringProcessor = new StringProcessor;
-        expect($stringProcessor->process('test'))->toBe('test');
-        expect($stringProcessor->process('  test  '))->toBe('test');
-        expect($stringProcessor->process(''))->toBe('');
-    });
-
-    it('handles prefix and suffix', function () {
-        $classes = twine()
-            ->with('bg-red-500')
-            ->prefix('hover:', fn ($twine) => $twine->with('text-white'))
-            ->suffix('/50', fn ($twine) => $twine->with('text-white'))
-            ->build();
-
-        expect($classes)->toBe('bg-red-500 hover:text-white text-white/50');
-    });
-
-    it('handles empty inputs in prefix and suffix', function () {
-        $classes = twine('base')
-            ->prefix('hover:', fn ($twine) => $twine->with(''))
-            ->suffix('/50', fn ($twine) => $twine->with(null))
-            ->build();
-
-        expect($classes)->toBe('base');
-    });
-
-    it('handles arrays in prefix and suffix', function () {
-        $classes = twine('base')
-            ->prefix('hover:', fn ($twine) => $twine->with(['bg-blue-500', 'text-white']))
-            ->suffix('/50', fn ($twine) => $twine->with(['opacity', 'blur']))
-            ->build();
-
-        expect($classes)->toBe('base hover:bg-blue-500 hover:text-white opacity/50 blur/50');
-    });
-
-    it('handles nested prefix and suffix calls', function () {
-        $classes = twine('base')
-            ->prefix('hover:', fn ($twine) => $twine
-                ->with('bg-blue-500')
-                ->prefix('focus:', fn ($twine) => $twine
-                    ->with('ring-2'))
-                ->suffix('/80', fn ($twine) => $twine->with('ring-2')))
-            ->build();
-
-        expect($classes)->toBe('base hover:bg-blue-500 hover:focus:ring-2 hover:ring-2/80');
-    });
-
-    it('handles numeric values in prefix and suffix', function () {
-        $classes = twine('base')
-            ->prefix('scale-', fn ($twine) => $twine->with([100, 200]))
-            ->suffix('%', fn ($twine) => $twine->with([50, 75]))
-            ->build();
-
-        expect($classes)->toBe('base scale-100 scale-200 50% 75%');
-    });
-
-    it('handles mixed types in prefix and suffix', function () {
-        $classes = twine('base')
-            ->prefix('p-', fn ($twine) => $twine->with([1, 'sm', 'lg']))
-            ->suffix('-important', fn ($twine) => $twine->with(['bold', 0, 'italic']))
-            ->build();
-
-        expect($classes)->toBe('base p-1 p-sm p-lg bold-important 0-important italic-important');
-    });
-
-    it('throws InvalidTwineException for invalid input types', function () {
-        expect(fn () => new Twine(true))->toThrow(InvalidTwineException::class);
-        expect(fn () => Twine::make(true))->toThrow(InvalidTwineException::class);
-        expect(fn () => twine()->with(true))->toThrow(InvalidTwineException::class);
-    });
-
-    it('throws InvalidTwineException with correct message', function () {
-        expect(fn () => new Twine(true))->toThrow(InvalidTwineException::class, 'Input must be a string, array, or null.');
-        expect(fn () => Twine::make(true))->toThrow(InvalidTwineException::class, 'Input must be a string, array, or null.');
-        expect(fn () => twine()->with(true))->toThrow(InvalidTwineException::class, 'Input must be a string, array, or null.');
-    });
-
-    it('handles deeply nested arrays', function () {
-        $classes = twine('base')
-            ->with([
-                'level1',
-                [
-                    'level2',
-                    [
-                        'level3',
-                        ['level4'],
-                    ],
-                ],
-            ])
-            ->build();
-
-        expect($classes)->toBe('base level1 level2 level3 level4');
-    });
-
-    it('removes duplicate class names with unique method', function () {
-        $classes = twine('base')
-            ->with('text-red', 'text-red', ['text-blue', 'text-blue'])
-            ->unique()
-            ->build();
-
-        expect($classes)->toBe('base text-red text-blue');
-    });
-
-    it('sorts class names alphabetically', function () {
-        $classes = twine('base')
-            ->with('z-10', 'a-1', 'm-5')
-            ->sort()
-            ->build();
-
-        expect($classes)->toBe('base a-1 m-5 z-10');
-    });
-
-    it('combines all features', function () {
-        $classes = twine('base')
-            ->with(['text-red', 'text-blue'])
-            ->prefix('hover:', fn ($twine) => $twine->with('bg-gray'))
-            ->suffix('/50', fn ($twine) => $twine->with('opacity'))
-            ->unique()
-            ->sort()
-            ->build();
-
-        expect($classes)->toBe('base hover:bg-gray opacity/50 text-blue text-red');
+            it('casts to string using __toString', function () {
+                $builder = SimpleClassesBuilder::make('btn');
+                expect((string) $builder)->toBe('btn');
+            });
+        });
     });
 });
