@@ -1,6 +1,8 @@
 # Twine
 
-**Twine is a Laravel utility class for fluently building CSS class name strings.**
+Twine is a Laravel utility class for fluently building CSS class name strings.
+
+> Work-in-progress: do not use in production.
 
 ## Features
 
