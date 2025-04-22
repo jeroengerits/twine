@@ -1,15 +1,16 @@
 # Twine
 
-Twine is a Laravel utility class for fluently building CSS class name strings.
+Twine is a Laravel utility for fluently building CSS class name strings.
 
 > Work-in-progress: do not use in production.
 
 ## Features
 
-- Fluent interface
-- Handles strings, arrays & nested arrays
-- Supports conditional inputs
-- Removes duplicates
+- Fluent Interface
+- Class Builder
+    - Input string & nested string arrays
+    - Handle Conditional inputs
+    - Removes duplicates
 - Zero dependencies
 
 ## Installation
