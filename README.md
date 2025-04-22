@@ -7,7 +7,9 @@ Twine is a Laravel utility class for fluently building CSS class name strings.
 ## Features
 
 - Fluent interface
-- Supports Conditionals
+- Handles strings, arrays & nested arrays
+- Supports conditional inputs
+- Removes duplicates
 - Zero dependencies
 
 ## Installation
@@ -21,30 +23,22 @@ composer require jeroengerits/twine
 ### Basic Usage
 
 ```php
-// Create with initial classes
-$classes = Twime::make('btn')
-    ->add('btn-primary')
-    ->add('btn-lg');
-
-echo $classes; // "btn btn-primary btn-lg"
-
-// Or use the helper function
-$classes = twine('btn')
-    ->add('btn-primary');
-
-echo $classes; // "btn btn-primary"
+twine('btn btn-primary');
+// "btn btn-primary"
 ```
 
 ### Adding Classes
 
 ```php
-// Add single class
-$classes = twine('btn');
+// Adding
+twine('btn')->add('btn-lg');
+// "btn btn-lg"
 
-// Add multiple classes
-$classes = twine(['btn-primary', 'btn-lg']);
+// Nesting
+$classes = twine(['btn-primary', ['btn-lg', 'text-red']]);
+// btn-primart btn-lg text-red
 
-// Chain classes
+// Chaining
 $classes = twine('btn')
     ->add('btn-primary')
     ->add('btn-large');
