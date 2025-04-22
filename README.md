@@ -25,47 +25,33 @@ composer require jeroengerits/twine
 ```php
 // Simple
 twine('btn btn-primary');
-// "btn btn-primary"
 
 // Adding
 twine('btn')->add('btn-lg');
-// "btn btn-lg"
 
 // Nesting
 twine(['btn-primary', ['btn-lg', 'text-red']]);
-// btn-primary btn-lg text-red
 
 // Chaining
 twine('btn')
     ->add('btn-primary')
     ->add('btn-large');
-// btn btn-primary btn-large
 
 // Conditionally
 twine('btn')
     ->add('wow', true);
-// btn wow 
 
 twine('btn')
     ->add('wow', false);
-// btn 
 
-```
-
-### Conditional Classes
-
-```php
-
-
-    
 // Callback conditionally when `true`
-$classes = twine('btn')
+twine('btn')
     ->when(true, function ($twine) {
         return $twine->add('btn-lg');
     });
 
 // Callback conditionally when `false`
-$classes = twine('btn')
+twine('btn')
     ->unless(true, function ($twine) {
         return $twine->add('btn-active');
     });
@@ -77,8 +63,7 @@ $classes = twine('btn')
 $classes1 = twine('btn');
 $classes2 = twine('btn-primary');
 
-$merged = $classes1->merge($classes2);
-echo $merged; // "btn btn-primary"
+$classes1->merge($classes2);
 ```
 
 ### Output Methods
@@ -87,10 +72,10 @@ echo $merged; // "btn btn-primary"
 $classes = twine('btn btn-primary');
 
 // Get as string
-$string = $classes->toString(); // "btn btn-primary"
+$classes->toString(); // "btn btn-primary"
 
 // Get as array
-$array = $classes->toArray(); // ['btn', 'btn-primary']
+$classes->toArray(); // ['btn', 'btn-primary']
 
 // Use in string context
 echo $classes; // "btn btn-primary"
