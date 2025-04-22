@@ -39,31 +39,33 @@ echo $classes; // "btn btn-primary"
 // Add single class
 $classes = twine('btn');
 
+// Add multiple classes
+$classes = twine(['btn-primary', 'btn-lg']);
+
 // Chain classes
 $classes = twine('btn')
     ->add('btn-primary')
     ->add('btn-large');
 
-// Add multiple classes
-$classes = twine(['btn-primary', 'btn-lg']);
-
-// Add conditionally
-$classes = twine('btn')
-    ->add('btn-disabled', $isDisabled);
 ```
 
 ### Conditional Classes
 
 ```php
-// Add classes when condition is true
+
+// Simple conditionally
 $classes = twine('btn')
-    ->when($isLarge, function ($twine) {
+    ->add('btn-disabled', true);
+    
+// Callback conditionally when `true`
+$classes = twine('btn')
+    ->when(true, function ($twine) {
         return $twine->add('btn-lg');
     });
 
-// Add classes when condition is false
+// Callback conditionally when `false`
 $classes = twine('btn')
-    ->unless($isDisabled, function ($twine) {
+    ->unless(true, function ($twine) {
         return $twine->add('btn-active');
     });
 ```
