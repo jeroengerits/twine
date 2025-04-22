@@ -15,25 +15,16 @@ composer require jeroengerits/twine
 ### Basic Examples
 
 ```php
-// Simple usage
+// Simple
 twine('btn btn-primary');
 
-// Add classes
-twine('btn')->add('btn-lg');
+// Chain
+twine('btn')->add('btn-lg')->add('btn-warning');
 
-// Nested arrays
+// Nested
 twine(['btn-primary', ['btn-lg', 'text-red']]);
 
-// Chain methods
-twine('btn')
-    ->add('btn-primary')
-    ->add('btn-large');
-```
-
-### Conditional Classes
-
-```php
-// Simple condition
+// Conditional
 twine('btn')
     ->add('active', $isActive);
 
@@ -50,7 +41,7 @@ twine('btn')
     });
 ```
 
-### Combining Classes
+### Mergings
 
 ```php
 $classes1 = twine('btn');
