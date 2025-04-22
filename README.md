@@ -4,15 +4,6 @@ Twine is a Laravel utility for fluently building CSS class name strings.
 
 > Work-in-progress: do not use in production.
 
-## Features
-
-- Fluent Interface
-- Class Builder
-    - Input string & nested string arrays
-    - Handle Conditional inputs
-    - Removes duplicates
-- Zero dependencies
-
 ## Installation
 
 ```bash
@@ -21,44 +12,45 @@ composer require jeroengerits/twine
 
 ## Usage
 
-### Basic Usage
+### Basic Examples
 
 ```php
-// Simple
+// Simple usage
 twine('btn btn-primary');
 
-// Adding
+// Add classes
 twine('btn')->add('btn-lg');
 
-// Nesting
+// Nested arrays
 twine(['btn-primary', ['btn-lg', 'text-red']]);
 
-// Chaining
+// Chain methods
 twine('btn')
     ->add('btn-primary')
     ->add('btn-large');
+```
 
-// Conditionally
-twine('btn')
-    ->add('wow', true);
+### Conditional Classes
 
+```php
+// Simple condition
 twine('btn')
-    ->add('wow', false);
+    ->add('active', $isActive);
 
-// Callback conditionally when `true`
+// Callback when true
 twine('btn')
-    ->when(true, function ($twine) {
+    ->when($isLarge, function ($twine) {
         return $twine->add('btn-lg');
     });
 
-// Callback conditionally when `false`
+// Callback when false
 twine('btn')
-    ->unless(true, function ($twine) {
+    ->unless($isDisabled, function ($twine) {
         return $twine->add('btn-active');
     });
 ```
 
-### Merging Classes
+### Combining Classes
 
 ```php
 $classes1 = twine('btn');
@@ -67,41 +59,37 @@ $classes2 = twine('btn-primary');
 $classes1->merge($classes2);
 ```
 
-### Output Methods
+### Output
 
 ```php
 $classes = twine('btn btn-primary');
 
-// Get as string
+// As string
 $classes->toString(); // "btn btn-primary"
 
-// Get as array
+// As array
 $classes->toArray(); // ['btn', 'btn-primary']
 
-// Use in string context
+// String context
 echo $classes; // "btn btn-primary"
 ```
 
-## API Reference
+## API
 
 ### Static Methods
 
-- `make(array|string|null $classes = '', ?TwineClassesBuilder $builder = null): self` - Create a new instance with optional initial classes and builder.
+- `make(array|string|null $classes = '', ?TwineClassesBuilder $builder = null): self` - Create new instance
 
 ### Instance Methods
 
-- `add(array|string|null $classes, bool $condition = true): self` - Add classes to the instance.
-- `when(bool $condition, callable $callback): self` - Run callback if condition is true.
-- `unless(bool $condition, callable $callback): self` - Run callback if condition is false.
-- `merge(Twine $other): self` - Combine classes from another instance.
-- `toString(): string` - Get classes as space-separated string.
-- `toArray(): array` - Get classes as array.
-- `get(): string` - Alias for toString().
+- `add(array|string|null $classes, bool $condition = true): self` - Add classes
+- `when(bool $condition, callable $callback): self` - Add if true
+- `unless(bool $condition, callable $callback): self` - Add if false
+- `merge(Twine $other): self` - Combine with another instance
+- `toString(): string` - Get as string
+- `toArray(): array` - Get as array
+- `get(): string` - Alias for toString()
 
 ## License
 
 MIT License
-
-## Contributing
-
-Contributions are welcome! Feel free to submit a Pull Request or report issues on GitHub.
