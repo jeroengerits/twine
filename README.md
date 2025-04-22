@@ -23,25 +23,32 @@ composer require jeroengerits/twine
 ### Basic Usage
 
 ```php
+// Simple
 twine('btn btn-primary');
 // "btn btn-primary"
-```
 
-### Adding Classes
-
-```php
 // Adding
 twine('btn')->add('btn-lg');
 // "btn btn-lg"
 
 // Nesting
-$classes = twine(['btn-primary', ['btn-lg', 'text-red']]);
-// btn-primart btn-lg text-red
+twine(['btn-primary', ['btn-lg', 'text-red']]);
+// btn-primary btn-lg text-red
 
 // Chaining
-$classes = twine('btn')
+twine('btn')
     ->add('btn-primary')
     ->add('btn-large');
+// btn btn-primary btn-large
+
+// Conditionally
+twine('btn')
+    ->add('wow', true);
+// btn wow 
+
+twine('btn')
+    ->add('wow', false);
+// btn 
 
 ```
 
@@ -49,9 +56,7 @@ $classes = twine('btn')
 
 ```php
 
-// Simple conditionally
-$classes = twine('btn')
-    ->add('btn-disabled', true);
+
     
 // Callback conditionally when `true`
 $classes = twine('btn')
