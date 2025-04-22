@@ -4,10 +4,8 @@
 
 ## Features
 
-- Fluent interface for clean, readable classes
-- Conditional class management using callbacks
-- Support for strings, arrays, and nested arrays
-- Prefix and suffix support
+- Fluent interface
+- Supports Conditionals
 - Zero dependencies
 
 ## Installation
@@ -16,84 +14,100 @@
 composer require jeroengerits/twine
 ```
 
-## Core Features
+## Usage
+
+### Basic Usage
+
+```php
+// Create with initial classes
+$classes = Twime::make('btn')
+    ->add('btn-primary')
+    ->add('btn-lg');
+
+echo $classes; // "btn btn-primary btn-lg"
+
+// Or use the helper function
+$classes = twine('btn')
+    ->add('btn-primary');
+
+echo $classes; // "btn btn-primary"
+```
 
 ### Adding Classes
 
-Twine can handle both strings and arrays of class names. It also supports nested arrays, which will be flattened into a single list of classes.
-
 ```php
-// Using strings
-Twine::make('text-xl')
-    ->with('bg-red-500')
-    ->with('font-bold')
-    ->build();
-// returns 'text-xl bg-red-500 font-bold'
+// Add single class
+$classes = twine('btn');
 
-// Using arrays
-Twine::make('text-xl')
-    ->with(['bg-red-500', 'font-bold'])
-    ->build();
-// returns 'text-xl bg-red-500 font-bold'
+// Chain classes
+$classes = twine('btn')
+    ->add('btn-primary')
+    ->add('btn-large');
 
-// Using nested arrays
-Twine::make('text-xl')
-    ->with(['bg-red-500', ['font-bold', 'rounded']])
-    ->build();
-// returns 'text-xl bg-red-500 font-bold rounded'
+// Add multiple classes
+$classes = twine(['btn-primary', 'btn-lg']);
 
-// Multiple arguments
-Twine::make('text-xl')
-    ->with('bg-red-500', 'font-bold', ['rounded', 'shadow'])
-    ->build();
-// returns 'text-xl bg-red-500 font-bold rounded shadow'
+// Add conditionally
+$classes = twine('btn')
+    ->add('btn-disabled', $isDisabled);
 ```
 
 ### Conditional Classes
 
 ```php
-Twine::make('text-xl')
-    ->when(true, fn($twine) => $twine->with(['bg-blue-500', ['border', 'rounded']]))
-    ->build();
-// returns 'text-xl bg-blue-500 border rounded'
+// Add classes when condition is true
+$classes = twine('btn')
+    ->when($isLarge, function ($twine) {
+        return $twine->add('btn-lg');
+    });
+
+// Add classes when condition is false
+$classes = twine('btn')
+    ->unless($isDisabled, function ($twine) {
+        return $twine->add('btn-active');
+    });
 ```
 
-### Prefixes and Suffixes
+### Merging Classes
 
 ```php
-// Prefix
-Twine::make('text-white')
-    ->prefix('hover:', fn($twine) => $twine->with(['bg-blue-500', ['font-bold']]))
-    ->build();
-// returns 'text-white hover:bg-blue-500 hover:font-bold'
+$classes1 = twine('btn');
+$classes2 = twine('btn-primary');
 
-// Suffix
-Twine::make('bg-blue')
-    ->suffix('/50', fn($twine) => $twine->with(['text-white', ['shadow-lg']]))
-    ->build();
-// returns 'bg-blue text-white/50 shadow-lg/50'
+$merged = $classes1->merge($classes2);
+echo $merged; // "btn btn-primary"
 ```
 
-### Helper Function
+### Output Methods
 
 ```php
-twine()->make('text-xl')->build();
-// returns 'text-xl'
+$classes = twine('btn btn-primary');
+
+// Get as string
+$string = $classes->toString(); // "btn btn-primary"
+
+// Get as array
+$array = $classes->toArray(); // ['btn', 'btn-primary']
+
+// Use in string context
+echo $classes; // "btn btn-primary"
 ```
 
 ## API Reference
 
 ### Static Methods
 
-- `make(mixed ...$input): self` - Create a new Twine instance with optional initial classes. Accepts strings, arrays, and nested arrays.
+- `make(array|string|null $classes = '', ?TwineClassesBuilder $builder = null): self` - Create a new instance with optional initial classes and builder.
 
 ### Instance Methods
 
-- `with(mixed ...$input): self` - Add class names to the collection. Supports strings, arrays, and nested arrays.
-- `when(bool $condition, Closure $callback): self` - Conditionally add class names using a callback if the condition is true.
-- `prefix(string $prefix, Closure $callback): self` - Add a prefix to class names generated within the callback.
-- `suffix(string $suffix, Closure $callback): self` - Add a suffix to class names generated within the callback.
-- `build(): string` - Build and return the final class name string.
+- `add(array|string|null $classes, bool $condition = true): self` - Add classes to the instance.
+- `when(bool $condition, callable $callback): self` - Run callback if condition is true.
+- `unless(bool $condition, callable $callback): self` - Run callback if condition is false.
+- `merge(Twine $other): self` - Combine classes from another instance.
+- `toString(): string` - Get classes as space-separated string.
+- `toArray(): array` - Get classes as array.
+- `get(): string` - Alias for toString().
 
 ## License
 
