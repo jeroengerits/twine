@@ -39,5 +39,62 @@ describe('Twine', function () {
             $twine2 = Twine::make('active');
             expect($twine1->merge($twine2)->toString())->toBe('btn active');
         });
+
+        it('handles empty input', function (): void {
+            expect(Twine::make('')->toString())->toBe('');
+            expect(Twine::make([])->toString())->toBe('');
+            expect(Twine::make(null)->toString())->toBe('');
+        });
+
+        it('handles multiple spaces in string input', function (): void {
+            expect(Twine::make('btn  btn-primary')->toString())->toBe('btn btn-primary');
+        });
+
+        it('handles when condition', function (): void {
+            $twine = Twine::make('btn')
+                ->when(true, fn ($t) => $t->add('active'))
+                ->when(false, fn ($t) => $t->add('disabled'));
+            expect($twine->toString())->toBe('btn active');
+        });
+
+        it('handles unless condition', function (): void {
+            $twine = Twine::make('btn')
+                ->unless(false, fn ($t) => $t->add('active'))
+                ->unless(true, fn ($t) => $t->add('disabled'));
+            expect($twine->toString())->toBe('btn active');
+        });
+
+        it('handles complex nested conditions', function (): void {
+            $twine = Twine::make('btn')
+                ->when(true, fn ($t) => $t->add('active'))
+                ->unless(false, fn ($t) => $t->add('primary'))
+                ->add('large', true)
+                ->add('small', false);
+            expect($twine->toString())->toBe('btn active primary large');
+        });
+
+        it('handles multiple merges', function (): void {
+            $twine1 = Twine::make('btn');
+            $twine2 = Twine::make('active');
+            $twine3 = Twine::make('primary');
+            expect($twine1->merge($twine2)->merge($twine3)->toString())->toBe('btn active primary');
+        });
+
+        it('handles string conversion', function (): void {
+            $twine = Twine::make('btn')->add('active');
+            expect((string) $twine)->toBe('btn active');
+            expect($twine->__toString())->toBe('btn active');
+            expect($twine->get())->toBe('btn active');
+        });
+
+        it('handles array conversion', function (): void {
+            $twine = Twine::make('btn')->add('active');
+            expect($twine->toArray())->toBe(['btn', 'active']);
+        });
+
+        it('handles empty classes in array', function (): void {
+            $twine = Twine::make(['btn', '', null, 'active']);
+            expect($twine->toString())->toBe('btn active');
+        });
     });
 });

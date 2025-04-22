@@ -12,10 +12,18 @@ readonly class Twine implements TwineService
         protected array $input
     ) {}
 
-    public static function make(array|string $classes, bool $condition = true): TwineService
+    public static function make(array|string|null $classes = null, bool $condition = true): TwineService
     {
         if (! $condition) {
             return new self([]);
+        }
+
+        if ($classes === null) {
+            return new self([]);
+        }
+
+        if (is_string($classes)) {
+            return new self([array_filter(explode(' ', $classes))]);
         }
 
         return new self([$classes]);
@@ -25,6 +33,10 @@ readonly class Twine implements TwineService
     {
         if (! $condition) {
             return $this;
+        }
+
+        if (is_string($classes)) {
+            $classes = array_filter(explode(' ', $classes));
         }
 
         return new self([...$this->input, $classes]);
@@ -52,12 +64,23 @@ readonly class Twine implements TwineService
 
     public function toString(): string
     {
-        return implode(' ', $this->toArray());
+        return implode(' ', array_map(function ($item) {
+            return is_array($item) ? implode(' ', $item) : $item;
+        }, $this->toArray()));
     }
 
     public function toArray(): array
     {
-        return array_filter($this->input);
+        $result = [];
+        foreach ($this->input as $item) {
+            if (is_array($item)) {
+                $result = [...$result, ...$item];
+            } else {
+                $result[] = $item;
+            }
+        }
+
+        return array_values(array_filter($result, fn ($item) => ! empty($item) && is_string($item)));
     }
 
     public function getInput(): array
