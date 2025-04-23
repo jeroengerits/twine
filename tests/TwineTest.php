@@ -96,5 +96,87 @@ describe('Twine', function () {
             $twine = Twine::make(['btn', '', null, 'active']);
             expect($twine->toString())->toBe('btn active');
         });
+
+        it('should have match api that conditionally returns a value', function () {
+            $twine = Twine::make('text-red')
+                ->match('xs', [
+                    'xs' => 'text-xs',
+                    'lg' => 'text-lg',
+                ]);
+
+            expect($twine->toString())->toBe('text-red text-xs');
+        });
+
+        it('should not add class when key is not found in match', function () {
+            $twine = Twine::make('text-red')
+                ->match('md', [
+                    'xs' => 'text-xs',
+                    'lg' => 'text-lg',
+                ]);
+
+            expect($twine->toString())->toBe('text-red');
+        });
+
+        it('should handle empty haystack in match', function () {
+            $twine = Twine::make('text-red')
+                ->match('xs', []);
+
+            expect($twine->toString())->toBe('text-red');
+        });
+
+        it('should handle multiple matches', function () {
+            $twine = Twine::make('text-red')
+                ->match('xs', [
+                    'xs' => 'text-xs',
+                    'lg' => 'text-lg',
+                ])
+                ->match('lg', [
+                    'xs' => 'text-xs',
+                    'lg' => 'text-lg',
+                ]);
+
+            expect($twine->toString())->toBe('text-red text-xs text-lg');
+        });
+
+        it('should handle array values in match', function () {
+            $twine = Twine::make('text-red')
+                ->match('xs', [
+                    'xs' => ['text-xs', 'font-bold'],
+                    'lg' => 'text-lg',
+                ]);
+
+            expect($twine->toString())->toBe('text-red text-xs font-bold');
+        });
+
+        it('should handle string values in match', function () {
+            $twine = Twine::make('text-red')
+                ->match('lg', [
+                    'xs' => 'text-xs',
+                    'lg' => 'text-lg',
+                ]);
+
+            expect($twine->toString())->toBe('text-red text-lg');
+        });
+
+        it('should handle empty string values in match', function () {
+            $twine = Twine::make('text-red')
+                ->match('xs', [
+                    'xs' => '',
+                    'lg' => 'text-lg',
+                ]);
+
+            expect($twine->toString())->toBe('text-red');
+        });
+
+        it('should handle non-string keys in match', function () {
+            $twine = Twine::make('text-red')
+                ->match(1, [
+                    1 => 'text-xs',
+                    2 => 'text-lg',
+                ]);
+
+            expect($twine->toString())->toBe('text-red text-xs');
+        });
+
     });
 });

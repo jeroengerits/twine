@@ -16,6 +16,8 @@ interface TwineService extends Stringable
 
     public function merge(self $other): self;
 
+    public function match(string $needle, array $haystack): self;
+
     public function get(): string;
 
     public function toString(): string;

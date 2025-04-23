@@ -83,6 +83,15 @@ readonly class Twine implements TwineService
         return array_values(array_filter($result, fn ($item) => ! empty($item) && is_string($item)));
     }
 
+    public function match(string $needle, array $haystack): TwineService
+    {
+        if (array_key_exists($needle, $haystack)) {
+            return $this->add($haystack[$needle]);
+        }
+
+        return $this;
+    }
+
     public function getInput(): array
     {
         return $this->input;
